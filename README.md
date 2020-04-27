@@ -7,6 +7,7 @@ Example:
       - ../config.ovpn:/home/config.ovpn
     ports: 
       - 1339:1080
+      - "1400:22"
     cap_add:
       - NET_ADMIN
     dns:
