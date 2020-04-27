@@ -25,6 +25,16 @@ RUN apk add openvpn
 
 RUN apk add --no-cache supervisor
 
+RUN apk update \
+    && apk add openssh \
+    && mkdir /root/.ssh \
+    && chmod 0700 /root/.ssh \
+    && ssh-keygen -A \
+    && sed -i s/^#PasswordAuthentication\ yes/PasswordAuthentication\ yes/ /etc/ssh/sshd_config \
+    && sed -i s/^#PermitRootLogin\ prohibit-password/PermitRootLogin\ yes/ /etc/ssh/sshd_config \
+    && sed -i s/^AllowTcpForwarding\ no/AllowTcpForwarding\ yes/ /etc/ssh/sshd_config \
+    && echo -e "test\ntest\n" | passwd root
+
 COPY supervisord.conf /etc/supervisord.conf
 COPY sockd.conf /etc/
 
