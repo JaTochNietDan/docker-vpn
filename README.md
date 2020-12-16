@@ -1,5 +1,9 @@
-Example:
+# Docker OpenVPN container
+Allows you to connect a Docker container to a VPN for the purposes of tunneling connections of your choice through it.
 
+## Setup
+
+### Docker-Compose
 ```yaml
   openvpn:
     image: jatochnietdan/docker-vpn
