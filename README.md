@@ -12,6 +12,7 @@ Allows you to connect a Docker container to a VPN for the purposes of tunneling 
     ports: 
       - 1339:1080
       - "1400:22"
+      - "3128:3128"
     cap_add:
       - NET_ADMIN
     dns:
