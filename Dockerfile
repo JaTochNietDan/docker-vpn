@@ -35,6 +35,8 @@ RUN apk update \
     && sed -i s/^AllowTcpForwarding\ no/AllowTcpForwarding\ yes/ /etc/ssh/sshd_config \
     && echo -e "test\ntest\n" | passwd root
 
+RUN apk add squid
+
 COPY supervisord.conf /etc/supervisord.conf
 COPY sockd.conf /etc/
 
