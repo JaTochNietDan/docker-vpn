@@ -36,6 +36,11 @@ RUN apk update \
     && echo -e "test\ntest\n" | passwd root
 
 RUN apk add squid
+RUN apk add curl
+
+RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.19.16/bin/linux/amd64/kubectl
+RUN chmod +x ./kubectl
+RUN mv ./kubectl /usr/local/bin/kubectl
 
 COPY supervisord.conf /etc/supervisord.conf
 COPY sockd.conf /etc/
