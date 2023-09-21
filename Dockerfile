@@ -2,6 +2,8 @@ FROM debian:bullseye
 
 RUN apt-get update
 
+RUN apt-get install -y git
+
 RUN apt-get install -y openvpn
 RUN apt-get install -y supervisor
 RUN apt-get install -y ssh
@@ -30,6 +32,20 @@ RUN mv ./kubectl /usr/local/bin/kubectl
 RUN sed -i '/^http_access deny all/i acl all src 0.0.0.0/0\nhttp_access allow all' /etc/squid/squid.conf 
 RUN sed -i '/^http_access deny CONNECT !SSL_ports/d' /etc/squid/squid.conf 
 RUN sed -i '/^http_access deny !Safe_ports/d' /etc/squid/squid.conf
+
+ENV GOPATH=/home/go
+ENV PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+
+# Install go 1.19
+RUN curl -LO https://go.dev/dl/go1.19.13.linux-arm64.tar.gz
+RUN rm -rf /usr/local/go && tar -C /usr/local -xzf go1.19.13.linux-arm64.tar.gz
+
+# Install gost for SOCKS5 tunnel written in Go
+WORKDIR /home
+RUN git clone https://github.com/ginuerzh/gost.git
+WORKDIR /home/gost/cmd/gost
+RUN ls
+RUN go build -o $GOPATH/bin/gost
 
 COPY supervisord.conf /etc/supervisord.conf
 COPY sockd.conf /etc/danted.conf
