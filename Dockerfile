@@ -1,49 +1,42 @@
-FROM alpine:3.11
+FROM debian:bullseye
 
-ENV DANTE_VER 1.4.2
-ENV DANTE_URL https://www.inet.no/dante/files/dante-$DANTE_VER.tar.gz
-ENV DANTE_SHA 4c97cff23e5c9b00ca1ec8a95ab22972813921d7fbf60fc453e3e06382fc38a7
+RUN apt-get update
 
-RUN apk add --no-cache --virtual .build-deps \
-        build-base \
-        curl \
-        linux-pam-dev && \
-    install -v -d /src && \
-    curl -sSL $DANTE_URL -o /src/dante.tar.gz && \
-    echo "$DANTE_SHA */src/dante.tar.gz" | sha256sum -c && \
-    tar -C /src -vxzf /src/dante.tar.gz && \
-    cd /src/dante-$DANTE_VER && \
-    # https://lists.alpinelinux.org/alpine-devel/3932.html
-    ac_cv_func_sched_setscheduler=no ./configure && \
-    make -j install && \
-    cd / && rm -r /src && \
-    apk del .build-deps && \
-    apk add --no-cache \
-        linux-pam
+RUN apt-get install -y openvpn
+RUN apt-get install -y supervisor
+RUN apt-get install -y ssh
 
-RUN apk add openvpn
+RUN apt install -y \
+    dante-server \
+    openssl \
+    curl
 
-RUN apk add --no-cache supervisor
-
-RUN apk update \
-    && apk add openssh \
-    && mkdir /root/.ssh \
+RUN mkdir /root/.ssh \
     && chmod 0700 /root/.ssh \
     && ssh-keygen -A \
     && sed -i s/^#PasswordAuthentication\ yes/PasswordAuthentication\ yes/ /etc/ssh/sshd_config \
     && sed -i s/^#PermitRootLogin\ prohibit-password/PermitRootLogin\ yes/ /etc/ssh/sshd_config \
     && sed -i s/^AllowTcpForwarding\ no/AllowTcpForwarding\ yes/ /etc/ssh/sshd_config \
-    && echo -e "test\ntest\n" | passwd root
+    && echo "root:test"|chpasswd
 
-RUN apk add squid
-RUN apk add curl
+RUN apt-get install -y squid
+RUN apt-get install -y curl
 
-RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.19.16/bin/linux/amd64/kubectl
+RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.19.16/bin/linux/arm64/kubectl
 RUN chmod +x ./kubectl
 RUN mv ./kubectl /usr/local/bin/kubectl
 
+# Allow all connections via squid
+RUN sed -i '/^http_access deny all/i acl all src 0.0.0.0/0\nhttp_access allow all' /etc/squid/squid.conf 
+RUN sed -i '/^http_access deny CONNECT !SSL_ports/d' /etc/squid/squid.conf 
+RUN sed -i '/^http_access deny !Safe_ports/d' /etc/squid/squid.conf
+
 COPY supervisord.conf /etc/supervisord.conf
-COPY sockd.conf /etc/
+COPY sockd.conf /etc/danted.conf
+COPY up.sh /home/up.sh
+RUN chmod +x /home/up.sh
+
+RUN mkdir /var/run/sshd
 
 EXPOSE 1080
 
