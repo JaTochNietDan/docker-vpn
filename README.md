@@ -5,24 +5,24 @@ Allows you to connect a Docker container to a VPN for the purposes of tunneling 
 
 ### Docker-Compose
 ```yaml
+openvpnus:
+  image: dperson/openvpn-client
+  container_name: openvpnus
+  cap_add:
+    - NET_ADMIN
+  devices:
+    - /dev/net/tun:/dev/net/tun
+  volumes:
+    - ../us.ovpn:/vpn/vpn.conf
+  dns:
+    - 8.8.8.8
+    - 8.8.4.4
+  ports: 
+    - 1340:1080
+    - "1401:22"
+    - "3129:3128"
+    - "2346:2346"
 vpnus:
-  openvpnus:
-    image: dperson/openvpn-client
-    container_name: openvpnus
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    volumes:
-      - ../us.ovpn:/vpn/vpn.conf
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    ports: 
-      - 1340:1080
-      - "1401:22"
-      - "3129:3128"
-      - "2346:2346"
   image: jatochnietdan/docker-vpn
   container_name: vpnus
   volumes:
